@@ -1,18 +1,17 @@
 import os
 import subprocess
 import sys
-import shutil
-import time
 from config import (
     VMRUN_PATH,
-    CUSTOM_ISO_PATH,
+    ORIGINAL_ISO_PATH,
     TEMPLATE_VMX_PATH,
     NEW_VM_NAME,
     NEW_VM_PATH,
     NEW_VMX_PATH,
     CIDATA_ISO_PATH,
-    SCRIPT_DIR,
 )
+from create_cidata_iso import create_cidata_iso
+from cleanup import cleanup_vm
 
 def run_command(command, description):
     """Runs a command and returns its stdout. Exits on error."""
@@ -37,6 +36,7 @@ def run_command(command, description):
 def reconfigure_vmx(vmx_path, installer_iso_path, cidata_iso_path):
     """Reconfigures the VMX to attach the installer and cidata ISOs."""
     print(f"[ACTION] Reconfiguring VMX file at {vmx_path}...")
+    # Use forward slashes for VMX paths, as required by VMware
     installer_iso_vmx = installer_iso_path.replace('\\', '/')
     cidata_iso_vmx = cidata_iso_path.replace('\\', '/')
     
@@ -54,8 +54,10 @@ def reconfigure_vmx(vmx_path, installer_iso_path, cidata_iso_path):
     
     try:
         with open(vmx_path, 'r') as f: lines = f.readlines()
+        # Remove any previous settings that might conflict
         keys_to_remove = ['bios.bootOrder', 'guestinfo.', 'floppy', 'sata0:0.', 'sata0:1.']
         filtered_lines = [l for l in lines if not any(l.strip().startswith(k) for k in keys_to_remove)]
+        # Add a blank line for readability before our new settings
         final_lines = filtered_lines + ['\n'] + [f'{s}\n' for s in new_settings]
         with open(vmx_path, 'w') as f: f.writelines(final_lines)
         print("[SUCCESS] VMX file reconfigured.")
@@ -65,42 +67,35 @@ def reconfigure_vmx(vmx_path, installer_iso_path, cidata_iso_path):
 
 def main():
     """Main function to orchestrate the automated creation of an Ubuntu VM."""
-    print("--- Starting Custom ISO Based VM Creation ---")
+    print("--- Starting Cloud-Init Based VM Creation ---")
 
-    # 1. Prepare the custom autoinstall ISO
-    prepare_iso_script = os.path.join(SCRIPT_DIR, "prepare_custom_iso.py")
-    run_command([sys.executable, prepare_iso_script], "Prepare custom autoinstall ISO")
+    # 1. Create the cidata.iso for cloud-init
+    create_cidata_iso()
 
-    # 2. Create the cidata.iso for cloud-init
-    cidata_script = os.path.join(SCRIPT_DIR, "create-cidata-iso.py")
-    run_command([sys.executable, cidata_script], "Create cidata.iso")
-
-    # 3. Check for required files
-    if not all([os.path.exists(VMRUN_PATH), os.path.exists(CUSTOM_ISO_PATH), os.path.exists(TEMPLATE_VMX_PATH)]):
-        print("\n[ERROR] A required file or directory was not found.", file=sys.stderr)
+    # 2. Check for required files from config
+    if not all([os.path.exists(VMRUN_PATH), os.path.exists(ORIGINAL_ISO_PATH), os.path.exists(TEMPLATE_VMX_PATH)]):
+        print("\n[ERROR] A required file or directory was not found. Check config.py.", file=sys.stderr)
         sys.exit(1)
 
-    # 4. Clean up previous VM
+    # 3. Clean up previous VM if it exists
     if os.path.exists(NEW_VM_PATH):
-        print(f"[INFO] Previous VM '{NEW_VM_PATH}' exists. Running cleanup...")
-        cleanup_script = os.path.join(SCRIPT_DIR, "cleanup.py")
-        run_command([sys.executable, cleanup_script, NEW_VMX_PATH], "Run cleanup script")
+        cleanup_vm(NEW_VMX_PATH)
 
-    # 5. Clone the VM
+    # 4. Clone the VM from the template
     clone_command = [
         VMRUN_PATH, '-T', 'ws', 'clone', TEMPLATE_VMX_PATH, NEW_VMX_PATH, 'full', f'-cloneName={NEW_VM_NAME}'
     ]
     run_command(clone_command, f"Clone '{NEW_VM_NAME}' from template")
 
-    # 6. Reconfigure the new VMX file
-    reconfigure_vmx(NEW_VMX_PATH, CUSTOM_ISO_PATH, CIDATA_ISO_PATH)
+    # 5. Reconfigure the new VMX file to attach ISOs
+    reconfigure_vmx(NEW_VMX_PATH, ORIGINAL_ISO_PATH, CIDATA_ISO_PATH)
 
-    # 7. Start the new VM
+    # 6. Start the new VM to begin installation
     start_command = [VMRUN_PATH, 'start', NEW_VMX_PATH, 'gui']
     run_command(start_command, f"Start the '{NEW_VM_NAME}' VM")
     
     print("\n--- SCRIPT FINISHED ---")
-    print("The VM has been cloned and configured using the custom installer ISO method.")
+    print("The VM has been cloned and started with the cidata ISO for automated installation.")
 
 if __name__ == "__main__":
     main()

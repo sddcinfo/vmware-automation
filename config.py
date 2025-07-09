@@ -1,8 +1,3 @@
-# This is an example configuration file.
-# 1. Copy this file to 'config.py'.
-# 2. Edit 'config.py' with your actual paths and settings.
-# 'config.py' is ignored by git, so your local settings will not be committed.
-
 import os
 
 # --- VMware Configuration ---
@@ -24,7 +19,6 @@ NEW_VM_NAME = "ubuntu-autoinstall-final"
 ORIGINAL_ISO_PATH = os.path.join(os.path.expanduser("~"), "Downloads", "ubuntu-24.04.2-live-server-amd64.iso")
 
 # --- Script Paths ---
-# These paths are derived from the settings above and generally do not need to be changed.
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 VMRUN_PATH = os.path.join(VMWARE_INSTALL_DIR, "vmrun.exe")
 CUSTOM_ISO_PATH = os.path.join(SCRIPT_DIR, "ubuntu-autoinstall.iso")
