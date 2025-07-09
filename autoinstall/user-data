@@ -1,0 +1,30 @@
+#cloud-config
+autoinstall:
+  version: 1
+  identity:
+    hostname: ubuntu-vm
+    # The identity section is required, but we will disable password login 
+    # and use SSH keys for authentication.
+    # A dummy password and username are still required.
+    password: "!"
+    username: "ubuntu"
+  # Add a user with sudo access and an SSH key for authentication.
+  user-data:
+    users:
+      - name: ubuntu
+        sudo: ALL=(ALL) NOPASSWD:ALL
+        groups: [adm, sudo]
+        shell: /bin/bash
+        lock_passwd: true
+        ssh_authorized_keys:
+          # IMPORTANT: Replace this with your public SSH key.
+          - "ssh-rsa AAAA..."
+  network:
+    network:
+      version: 2
+      ethernets:
+        ens33:
+          dhcp4: true
+  storage:
+    layout:
+      name: direct
