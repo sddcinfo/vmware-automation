@@ -1,0 +1,11 @@
+# Ignore local configuration files
+config.py
+
+# Ignore pycache directories
+__pycache__/
+
+# Ignore temporary ISO directory
+iso_temp/
+
+# Ignore generated ISO files
+*.iso
