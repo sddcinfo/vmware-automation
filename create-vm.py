@@ -9,9 +9,8 @@ from config import (
     NEW_VM_PATH,
     NEW_VMX_PATH,
     CIDATA_ISO_PATH,
+    SCRIPT_DIR,
 )
-from create_cidata_iso import create_cidata_iso
-from cleanup import cleanup_vm
 
 def run_command(command, description):
     """Runs a command and returns its stdout. Exits on error."""
@@ -36,7 +35,6 @@ def run_command(command, description):
 def reconfigure_vmx(vmx_path, installer_iso_path, cidata_iso_path):
     """Reconfigures the VMX to attach the installer and cidata ISOs."""
     print(f"[ACTION] Reconfiguring VMX file at {vmx_path}...")
-    # Use forward slashes for VMX paths, as required by VMware
     installer_iso_vmx = installer_iso_path.replace('\\', '/')
     cidata_iso_vmx = cidata_iso_path.replace('\\', '/')
     
@@ -54,10 +52,8 @@ def reconfigure_vmx(vmx_path, installer_iso_path, cidata_iso_path):
     
     try:
         with open(vmx_path, 'r') as f: lines = f.readlines()
-        # Remove any previous settings that might conflict
         keys_to_remove = ['bios.bootOrder', 'guestinfo.', 'floppy', 'sata0:0.', 'sata0:1.']
         filtered_lines = [l for l in lines if not any(l.strip().startswith(k) for k in keys_to_remove)]
-        # Add a blank line for readability before our new settings
         final_lines = filtered_lines + ['\n'] + [f'{s}\n' for s in new_settings]
         with open(vmx_path, 'w') as f: f.writelines(final_lines)
         print("[SUCCESS] VMX file reconfigured.")
@@ -70,27 +66,30 @@ def main():
     print("--- Starting Cloud-Init Based VM Creation ---")
 
     # 1. Create the cidata.iso for cloud-init
-    create_cidata_iso()
+    cidata_script = os.path.join(SCRIPT_DIR, "create-cidata-iso.py")
+    run_command([sys.executable, cidata_script], "Create cidata.iso")
 
-    # 2. Check for required files from config
+    # 2. Check for required files
     if not all([os.path.exists(VMRUN_PATH), os.path.exists(ORIGINAL_ISO_PATH), os.path.exists(TEMPLATE_VMX_PATH)]):
         print("\n[ERROR] A required file or directory was not found. Check config.py.", file=sys.stderr)
         sys.exit(1)
 
-    # 3. Clean up previous VM if it exists
+    # 3. Clean up previous VM
     if os.path.exists(NEW_VM_PATH):
-        cleanup_vm(NEW_VMX_PATH)
+        print(f"[INFO] Previous VM '{NEW_VM_PATH}' exists. Running cleanup...")
+        cleanup_script = os.path.join(SCRIPT_DIR, "cleanup.py")
+        run_command([sys.executable, cleanup_script, NEW_VMX_PATH], "Run cleanup script")
 
-    # 4. Clone the VM from the template
+    # 4. Clone the VM
     clone_command = [
         VMRUN_PATH, '-T', 'ws', 'clone', TEMPLATE_VMX_PATH, NEW_VMX_PATH, 'full', f'-cloneName={NEW_VM_NAME}'
     ]
     run_command(clone_command, f"Clone '{NEW_VM_NAME}' from template")
 
-    # 5. Reconfigure the new VMX file to attach ISOs
+    # 5. Reconfigure the new VMX file
     reconfigure_vmx(NEW_VMX_PATH, ORIGINAL_ISO_PATH, CIDATA_ISO_PATH)
 
-    # 6. Start the new VM to begin installation
+    # 6. Start the new VM
     start_command = [VMRUN_PATH, 'start', NEW_VMX_PATH, 'gui']
     run_command(start_command, f"Start the '{NEW_VM_NAME}' VM")
     
