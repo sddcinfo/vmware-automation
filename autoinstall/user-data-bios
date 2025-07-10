@@ -1,0 +1,51 @@
+#cloud-config
+autoinstall:
+  version: 1
+  refresh-installer:
+    update: false
+  identity:
+    hostname: ubuntu-vm
+    password: "!"
+    username: "ubuntu"
+  user-data:
+    users:
+      - name: ubuntu
+        sudo: ALL=(ALL) NOPASSWD:ALL
+        groups: [adm, sudo]
+        shell: /bin/bash
+        lock_passwd: true
+        ssh_authorized_keys:
+          - "ssh-rsa AAAA..."
+  network:
+    network:
+      version: 2
+      ethernets:
+        ens33:
+          dhcp4: true
+  # This storage layout is for legacy BIOS systems.
+  storage:
+    layout:
+      name: direct
+      match:
+        size: largest
+    config:
+      - type: disk
+        id: disk-sda
+        ptable: msdos # Use msdos for BIOS
+        wipe: true
+        path: /dev/sda
+        grub_device: true
+      - type: partition
+        id: partition-1
+        device: disk-sda
+        size: -1 # Use the entire disk
+        number: 1
+        flag: boot # Mark as bootable for BIOS
+      - type: format
+        id: format-1
+        volume: partition-1
+        fstype: ext4
+      - type: mount
+        id: mount-1
+        device: format-1
+        path: /
