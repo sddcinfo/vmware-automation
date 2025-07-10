@@ -34,58 +34,30 @@ def run_command(command, description):
         sys.exit(1)
 
 def reconfigure_vmx(vmx_path, installer_iso_path, cidata_iso_path):
-    """
-    Reconfigures the VMX file by appending settings. This is safer than
-    rewriting the file, as it preserves original encoding and metadata.
-    """
+    """Reconfigures the VMX to attach the installer and cidata ISOs."""
     print(f"[ACTION] Reconfiguring VMX file at {vmx_path}...")
-    installer_iso_vmx = installer_iso_path.replace('', '/')
-    cidata_iso_vmx = cidata_iso_path.replace('', '/')
+    installer_iso_vmx = installer_iso_path.replace('\\', '/')
+    cidata_iso_vmx = cidata_iso_path.replace('\\', '/')
     
-    # Settings to add. We will append these to the VMX file.
-    settings_to_add = {
-        "bios.bootOrder": '"cdrom"',
-        "guestinfo.autoinstall.interactive": '"false"',
-        "sata0:0.present": '"TRUE"',
-        "sata0:0.fileName": f'"{installer_iso_vmx}"',
-        "sata0:0.deviceType": '"cdrom-image"',
-        "sata0:0.startConnected": '"TRUE"',
-        "sata0:1.present": '"TRUE"',
-        "sata0:1.fileName": f'"{cidata_iso_vmx}"',
-        "sata0:1.deviceType": '"cdrom-image"',
-        "sata0:1.startConnected": '"TRUE"',
-    }
-
+    new_settings = [
+        'bios.bootOrder = "cdrom"',
+        'sata0:0.present = "TRUE"',
+        f'sata0:0.fileName = "{installer_iso_vmx}"',
+        'sata0:0.deviceType = "cdrom-image"',
+        'sata0:0.startConnected = "TRUE"',
+        'sata0:1.present = "TRUE"',
+        f'sata0:1.fileName = "{cidata_iso_vmx}"',
+        'sata0:1.deviceType = "cdrom-image"',
+        'sata0:1.startConnected = "TRUE"',
+    ]
+    
     try:
-        # Read all lines, preserving encoding. utf-8-sig handles BOMs.
-        with open(vmx_path, 'r', encoding='utf-8-sig') as f:
-            lines = f.readlines()
-
-        # Create a dictionary of keys to remove for efficient lookup
-        keys_to_remove = {k.split('.')[0] for k in settings_to_add.keys()}
-        keys_to_remove.add('floppy') # Also remove floppy devices
-        # Add additional keys found in corrected_old_string that were not in original_old_string
-        keys_to_remove.add('bios')
-        keys_to_remove.add('virtualHW')
-        keys_to_remove.add('guestOS')
-        keys_to_remove.add('scsi0')
-
-        # Filter out lines containing keys we intend to replace/add.
-        # This prevents duplicate or conflicting settings.
-        filtered_lines = [
-            line for line in lines 
-            if line.strip().split('.')[0] not in keys_to_remove
-        ]
-
-        # Append the new settings to the filtered list.
-        for key, value in settings_to_add.items():
-            filtered_lines.append(f'{key} = {value}\n')
-
-        # Write the modified content back, preserving encoding.
-        with open(vmx_path, 'w', encoding='utf-8-sig') as f:
-            f.writelines(filtered_lines)
-            
-        print("[SUCCESS] VMX file reconfigured using append method.")
+        with open(vmx_path, 'r') as f: lines = f.readlines()
+        keys_to_remove = ['bios.bootOrder', 'guestinfo.', 'floppy', 'sata0:0.', 'sata0:1.']
+        filtered_lines = [l for l in lines if not any(l.strip().startswith(k) for k in keys_to_remove)]
+        final_lines = filtered_lines + ['\n'] + [f'{s}\n' for s in new_settings]
+        with open(vmx_path, 'w') as f: f.writelines(final_lines)
+        print("[SUCCESS] VMX file reconfigured.")
     except Exception as e:
         print(f"\n[ERROR] Failed to reconfigure VMX file: {e}", file=sys.stderr)
         sys.exit(1)

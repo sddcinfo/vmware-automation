@@ -11,7 +11,7 @@ This project provides a set of Python scripts to fully automate the creation of 
 
 ## Prerequisites
 
-1.  **VMware Workstation**: Must be installed on the host machine.
+1.  **VMware Workstation**: Must be installed on the host machine. The automation relies on the `vmrun.exe` command-line utility that is included with the installation.
 2.  **Python 3**: With `pip` available.
 3.  **Ubuntu 24.04 Server ISO**: You must download the installer ISO from the official Ubuntu website.
 4.  **Template VM**: A base Ubuntu VM must be created in VMware Workstation. This can be a minimal installation or even a blank VM with the correct OS type set. This template will be cloned to create new VMs.
@@ -53,6 +53,7 @@ Follow these steps to create the template:
 4.  **Configure Autoinstall**:
     - Open `autoinstall/user-data` and replace the placeholder SSH key with your own public SSH key.
     - You can also change the `hostname` and `username` in this file.
+    - **Note on BIOS vs. UEFI**: The provided `user-data` file is configured for a template VM that uses legacy BIOS. If your template VM is configured to use UEFI, you will need to modify the `storage` section in `autoinstall/user-data` accordingly (e.g., by creating an EFI system partition).
 
 ## Usage
 
