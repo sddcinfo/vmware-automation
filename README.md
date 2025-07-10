@@ -70,6 +70,8 @@ The script will:
 4.  Attach the Ubuntu installer ISO and the `cidata.iso`.
 5.  Set the VM to boot from the CD-ROM and start it, beginning the unattended installation.
 
+**IMPORTANT**: During the installation, the Ubuntu installer will prompt you to confirm the destructive action of wiping the disk. You must manually type `yes` in the VM console to proceed. This is the only manual step required.
+
 ## How It Works
 
 The automation relies on the `cloud-init` standard, which is widely used for provisioning cloud instances. The Ubuntu installer (Subiquity) supports using a cloud-init data source for unattended installations.
