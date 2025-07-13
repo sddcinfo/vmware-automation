@@ -51,3 +51,10 @@ autoinstall:
         id: mount-1
         device: format-1
         path: /
+  packages:
+    - git
+    - gh
+    - ansible
+  user-data:
+    package_update: true
+    package_upgrade: true
