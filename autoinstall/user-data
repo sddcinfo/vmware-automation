@@ -5,23 +5,25 @@ autoinstall:
     update: false
   identity:
     hostname: ubuntu-vm
-    password: "!"
-    username: "ubuntu"
+  # default password is 'password' 
+    password: "$6$rounds=656000$X0UBIHnCCUvTIJ0c$2Fh75NRz8POPCxwXadHSyd6vH3VKYUpq6yycaLt4Xc5koN1DCqd5cdsKb3yraBPqH0uyrMYq89cH5KhaQOuKj."
+    username: "sysadmin"
   user-data:
     users:
-      - name: ubuntu
+      - name: sysadmin
         sudo: ALL=(ALL) NOPASSWD:ALL
-        groups: [adm, sudo]
         shell: /bin/bash
-        lock_passwd: true
-        ssh_authorized_keys:
-          - "ssh-rsa AAAA..."
+  ssh:
+    install-server: true
+    allow-pw: true
   network:
-    network:
-      version: 2
-      ethernets:
-        ens33:
-          dhcp4: true
+    version: 2
+    ethernets:
+      ens33:
+        dhcp4: false
+        addresses: [10.10.1.1/24]
+      ens34:
+        dhcp4: true
   # This storage layout is for legacy BIOS systems.
   storage:
     layout:
