@@ -1,11 +1,9 @@
 #cloud-config
 autoinstall:
   version: 1
-  refresh-installer:
-    update: false
   identity:
     hostname: ubuntu-vm
-  # default password is 'password' 
+    # default password is 'password' 
     password: "$6$rounds=656000$X0UBIHnCCUvTIJ0c$2Fh75NRz8POPCxwXadHSyd6vH3VKYUpq6yycaLt4Xc5koN1DCqd5cdsKb3yraBPqH0uyrMYq89cH5KhaQOuKj."
     username: "sysadmin"
   user-data:
@@ -32,14 +30,14 @@ autoinstall:
         size: largest
     config:
       - type: disk
-        id: disk-sda
+        id: disk-nvme0n1
         ptable: msdos # Use msdos for BIOS
         wipe: true
-        path: /dev/sda
+        path: /dev/nvme0n1
         grub_device: true
       - type: partition
         id: partition-1
-        device: disk-sda
+        device: disk-nvme0n1
         size: -1 # Use the entire disk
         number: 1
         flag: boot # Mark as bootable for BIOS
@@ -51,10 +49,3 @@ autoinstall:
         id: mount-1
         device: format-1
         path: /
-  packages:
-    - git
-    - gh
-    - ansible
-  user-data:
-    package_update: true
-    package_upgrade: true
