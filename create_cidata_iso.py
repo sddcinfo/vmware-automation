@@ -7,7 +7,6 @@ for automated Ubuntu VM provisioning using the cidata standard.
 import os
 import logging
 from pathlib import Path
-from typing import bool
 
 import pycdlib
 

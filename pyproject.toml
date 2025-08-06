@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "vmware-automation"
 version = "1.0.0"
-description = "Professional automation suite for creating Ubuntu VMs in VMware Workstation"
+description = "Enterprise-grade automation suite for creating Ubuntu 24.04 VMs in VMware Workstation with cloud-init provisioning, comprehensive logging, and configuration validation"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
@@ -24,7 +24,11 @@ classifiers = [
     "Topic :: System :: Installation/Setup",
     "Topic :: System :: Systems Administration",
 ]
-keywords = ["vmware", "automation", "ubuntu", "cloud-init", "virtualization"]
+keywords = [
+    "vmware", "vmware-workstation", "automation", "ubuntu", "ubuntu-24-04",
+    "cloud-init", "virtualization", "vm-automation", "infrastructure",
+    "devops", "python", "enterprise", "vm-lifecycle", "unattended-installation"
+]
 requires-python = ">=3.8"
 dependencies = [
     "pycdlib>=1.14.0",
