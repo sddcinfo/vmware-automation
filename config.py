@@ -6,7 +6,7 @@ VMWARE_INSTALL_DIR = r"C:\Program Files (x86)\VMware\VMware Workstation"
 
 # --- VM Configuration ---
 # IMPORTANT: Set this to the base directory where you want to store your VMs
-VM_BASE_PATH = r"C:\VMs"
+VM_BASE_PATH = r"D:\VMs"
 
 # IMPORTANT: Set this to the full path of your template's .vmx file
 TEMPLATE_VMX_PATH = os.path.join(VM_BASE_PATH, "ubuntu-template", "ubuntu-template.vmx")

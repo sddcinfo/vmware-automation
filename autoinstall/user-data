@@ -49,3 +49,7 @@ autoinstall:
         id: mount-1
         device: format-1
         path: /
+  packages:
+    - git
+    - gh
+    - ansible
