@@ -1,79 +1,220 @@
-# VMware Workstation Automation for Ubuntu 24.04
+# VMware Workstation Ubuntu Automation
 
-This project provides a set of Python scripts to fully automate the creation of an Ubuntu 24.04 virtual machine in VMware Workstation using cloud-init for unattended installation.
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-## Features
+Professional automation suite for creating Ubuntu 24.04 virtual machines in VMware Workstation using cloud-init for unattended installation and configuration.
 
-- **Fully Automated**: Creates a new Ubuntu VM from a template with zero manual intervention.
-- **Cloud-Init Driven**: Uses a `cidata.iso` with `user-data` and `meta-data` for robust, unattended OS installation and configuration.
-- **Clean and Modular**: Scripts are separated by concern (VM creation, ISO creation, cleanup).
-- **Robust**: Includes error handling and cleanup logic to manage existing VMs.
+## ✨ Features
 
-## Prerequisites
+- **🤖 Fully Automated**: Zero-touch VM creation from template to running system
+- **☁️ Cloud-Init Integration**: Industry-standard provisioning with `user-data` configuration  
+- **🧹 Intelligent Cleanup**: Robust VM lifecycle management with cleanup utilities
+- **🔧 Modular Design**: Separated concerns across dedicated Python modules
+- **📋 Error Handling**: Comprehensive error reporting and recovery mechanisms
+- **⚙️ Configurable**: Customizable network, storage, and package configurations
 
-1.  **VMware Workstation**: Must be installed on the host machine. The automation relies on the `vmrun.exe` command-line utility that is included with the installation.
-2.  **Python 3**: With `pip` available.
-3.  **Ubuntu 24.04 Server ISO**: You must download the installer ISO from the official Ubuntu website.
-4.  **Template VM**: A base Ubuntu VM must be created in VMware Workstation. This can be a minimal installation or even a blank VM with the correct OS type set. This template will be cloned to create new VMs.
-
-## Creating the Ubuntu Template VM
-
-The automation relies on cloning a base template VM. It is crucial that this template is a **blank VM** with the correct hardware configuration, but **without an operating system installed**. The scripts will handle the OS installation automatically.
-
-Follow these steps to create the template:
-
-1.  **Open VMware Workstation** and select **File > New Virtual Machine**.
-2.  Choose **Typical (recommended)** and click Next.
-3.  Select **I will install the operating system later.** and click Next. This is the most important step.
-4.  For the Guest operating system, select **Linux**. For the Version, select **Ubuntu 64-bit**. Click Next.
-5.  Name the virtual machine **ubuntu-template**. You can store it in your default VM directory. Click Next.
-6.  Specify a disk size of at least **25 GB**. Select **Store virtual disk as a single file** for better performance. Click Next.
-7.  Click **Customize Hardware...** and configure the following:
-    - **Memory**: Assign at least **4 GB** of memory.
-    - **Processors**: Assign at least **2 processor cores**.
-    - **Network Adapter**: Ensure it is set to **NAT** or **Bridged** to allow internet access for the installer.
-8.  Click **Close**, then **Finish** to create the virtual machine.
-9.  **Do not power on the VM.** The template is now ready. Make sure the path to its `.vmx` file is correctly set in `config.py`.
-
-## Setup
-
-1.  **Clone this repository.**
-2.  **Install Python dependencies**:
-    ```bash
-    pip install -r requirements.txt
-    ```
-3.  **Configure `config.py`**:
-    Open `config.py` and edit the variables to match your environment:
-    - `VMWARE_INSTALL_DIR`: The path to your VMware Workstation installation directory.
-    - `VM_BASE_PATH`: The directory where new VMs will be created.
-    - `TEMPLATE_VMX_PATH`: The absolute path to the `.vmx` file of your template VM.
-    - `ORIGINAL_ISO_PATH`: The absolute path to your downloaded Ubuntu 24.04 Server ISO file.
-    - `NEW_VM_NAME`: The desired name for the new virtual machine.
-
-4.  **Configure Autoinstall**:
-    - Open `autoinstall/user-data` and replace the placeholder SSH key with your own public SSH key.
-    - You can also change the `hostname` and `username` in this file.
-    - **Note on BIOS vs. UEFI**: The provided `user-data` file is configured for a template VM that uses legacy BIOS. If your template VM is configured to use UEFI, you will need to modify the `storage` section in `autoinstall/user-data` accordingly (e.g., by creating an EFI system partition).
-
-## Usage
-
-To create a new Ubuntu VM, simply run the main script:
+## 🚀 Quick Start
 
 ```bash
-python create-vm.py
+# Clone repository
+git clone https://github.com/sddcinfo/vmware-automation.git
+cd vmware-automation
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Configure your environment
+cp config.py.example config.py
+# Edit config.py with your specific paths
+
+# Create your first VM
+python create_vm.py
 ```
 
-The script will:
-1.  Create a `cidata.iso` file containing your cloud-init configuration.
-2.  Clean up any VM from a previous run.
-3.  Clone your template VM.
-4.  Attach the Ubuntu installer ISO and the `cidata.iso`.
-5.  Set the VM to boot from the CD-ROM and start it, beginning the unattended installation.
+## 📋 Prerequisites
 
-**IMPORTANT**: During the installation, the Ubuntu installer will prompt you to confirm the destructive action of wiping the disk. You must manually type `yes` in the VM console to proceed. This is the only manual step required.
+### Required Software
+- **VMware Workstation** (tested on v16+) with vmrun.exe
+- **Python 3.8+** with pip package manager
+- **Ubuntu 24.04 Server ISO** ([download here](https://ubuntu.com/download/server))
 
-## How It Works
+### System Requirements  
+- **Disk Space**: 25GB+ available for VM storage
+- **Memory**: 4GB+ recommended for VM operation
+- **Network**: Internet connection for package installation during VM setup
 
-The automation relies on the `cloud-init` standard, which is widely used for provisioning cloud instances. The Ubuntu installer (Subiquity) supports using a cloud-init data source for unattended installations.
+## ⚙️ Configuration
 
-This project uses the **cidata ISO method**. A small ISO image with the volume ID `cidata` is created, containing the `user-data` and `meta-data` files. When the Ubuntu installer boots, it automatically detects this ISO, reads the configuration, and proceeds with the installation without requiring any user input. This method is more reliable in VMware Workstation than using the `guestinfo` interface.
+### Template VM Creation
+
+Create a blank Ubuntu template VM in VMware Workstation:
+
+1. **New Virtual Machine** → **Typical (recommended)**
+2. **⚠️ CRITICAL**: Select "I will install the operating system later"
+3. **Guest OS**: Linux → Ubuntu 64-bit  
+4. **VM Name**: `ubuntu-template`
+5. **Hardware Configuration**:
+   - **Disk**: 25GB minimum (single file recommended)
+   - **Memory**: 4GB+
+   - **Processors**: 2+ cores
+   - **Network**: NAT or Bridged for internet access
+
+**Important**: Do not power on the template VM. The automation handles OS installation.
+
+### Environment Setup
+
+1. **Configure VMware Paths**: Update paths in `config.py`:
+   - `VMWARE_INSTALL_DIR`: VMware Workstation installation directory
+   - `VM_BASE_PATH`: Directory for storing VMs
+   - `TEMPLATE_VMX_PATH`: Path to template VM's .vmx file
+   - `ORIGINAL_ISO_PATH`: Ubuntu 24.04 Server ISO location
+   - `NEW_VM_NAME`: Desired name for new VMs
+
+2. **Cloud-Init Configuration**: Customize `autoinstall/user-data`:
+   - **Hostname**: Change `ubuntu-vm` to your preferred hostname
+   - **Username**: Modify default `sysadmin` username if desired
+   - **Network**: Configure static IP or DHCP settings
+   - **Packages**: Add/remove packages in the packages section
+   - **Storage**: Configured for BIOS (modify for UEFI if needed)
+
+## 🛠️ Usage
+
+### Basic VM Creation
+```bash
+python create_vm.py
+```
+
+### Manual Components
+```bash
+# Create cloud-init ISO only
+python create_cidata_iso.py
+
+# Clean up specific VM  
+python cleanup.py /path/to/vm.vmx
+
+# Clean up default VM
+python cleanup.py
+```
+
+### Automated Process
+The script executes the following steps:
+1. **🔧 Generate cidata.iso** with your cloud-init configuration
+2. **🧹 Clean up** any existing VM from previous runs
+3. **📋 Clone template** VM to create new instance
+4. **💿 Attach ISOs** (Ubuntu installer + cidata for automation)
+5. **🚀 Start VM** and begin unattended installation
+
+**Note**: During installation, Ubuntu may prompt to confirm disk wiping - type `yes` to proceed. This is the only manual step required.
+
+## 📁 Project Structure
+
+```
+vmware-automation/
+├── config.py              # Configuration management with validation
+├── create_vm.py           # Main orchestration script with logging
+├── create_cidata_iso.py   # Cloud-init ISO generation
+├── cleanup.py             # VM cleanup utilities  
+├── requirements.txt       # Python dependencies
+├── pyproject.toml         # Modern Python packaging configuration
+├── .gitignore             # Git ignore patterns
+├── config.py.example      # Example configuration template
+├── autoinstall/
+│   ├── user-data         # Cloud-init configuration
+│   └── meta-data         # Instance metadata
+└── README.md             # This documentation
+```
+
+## 🔧 How It Works
+
+This automation uses the **cloud-init standard** for VM provisioning:
+
+- **Cloud-Init**: Industry standard for instance initialization
+- **cidata ISO Method**: Creates ISO with volume ID `cidata` containing configuration
+- **Ubuntu Autoinstall**: Subiquity installer automatically detects and uses cidata
+- **VMware Integration**: Uses vmrun.exe for VM lifecycle management
+
+The cidata ISO method is more reliable in VMware Workstation than guestinfo interfaces.
+
+## 🔧 Advanced Configuration
+
+### Network Configuration
+Configure static IP in `autoinstall/user-data`:
+```yaml
+network:
+  version: 2
+  ethernets:
+    ens33:
+      dhcp4: false
+      addresses: [192.168.1.100/24]
+      gateway4: 192.168.1.1
+      nameservers:
+        addresses: [8.8.8.8, 1.1.1.1]
+```
+
+### Package Management
+Add custom packages:
+```yaml
+packages:
+  - git
+  - docker.io
+  - htop
+  - vim
+  - curl
+```
+
+### Post-Install Commands
+Execute custom commands after installation:
+```yaml
+runcmd:
+  - systemctl enable docker
+  - usermod -aG docker sysadmin
+  - apt update && apt upgrade -y
+```
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+| Issue | Cause | Solution |
+|-------|-------|----------|
+| "Command not found: vmrun" | VMware path incorrect | Update `VMWARE_INSTALL_DIR` in config.py |
+| "Template not found" | Missing template VM | Create template VM following setup guide |
+| "ISO creation failed" | Missing autoinstall files | Verify `autoinstall/` directory exists |
+| "VM won't start" | Hardware conflicts | Check VMware Workstation settings |
+| "Network unreachable" | Network misconfiguration | Verify network settings in user-data |
+
+### Debug Information
+- Check VMware Workstation logs in VM directory
+- Review cloud-init logs: `/var/log/cloud-init.log` in VM
+- Verify ISO contents: Mount cidata.iso to inspect files
+
+## 🤝 Contributing
+
+1. **Fork** the repository
+2. **Create** feature branch (`git checkout -b feature/improvement`)  
+3. **Commit** changes (`git commit -am 'Add feature'`)
+4. **Push** to branch (`git push origin feature/improvement`)
+5. **Create** Pull Request
+
+Please ensure code follows project standards and includes appropriate documentation.
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- **Ubuntu Team** for comprehensive cloud-init documentation
+- **VMware** for robust vmrun CLI automation tools  
+- **Python Community** for pycdlib ISO creation library
+
+## 📞 Support
+
+- **Issues**: [GitHub Issues](https://github.com/sddcinfo/vmware-automation/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/sddcinfo/vmware-automation/discussions)  
+- **Documentation**: [Wiki](https://github.com/sddcinfo/vmware-automation/wiki)
+
+---
+**⭐ Star this repository if you find it helpful!**
